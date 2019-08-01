@@ -72,9 +72,10 @@ Brightness Levels:
 255 = 100%
 */
 
-volatile int dayLevel = 175;
+volatile int dayLevel = 200;
+volatile int signalInner = 50;
+volatile int signalCentre = 50;
 volatile int signalOuter = 50;
-volatile int signalCentre = 0;
 volatile int nightLevelInner = 100;
 volatile int nightLevelMiddle = 100;
 volatile int nightLevelOuter = 100;
@@ -89,6 +90,7 @@ long IndicatorDebounceTimer = 0;    // Indicator noise debounce timer
 long IndicatorLockoutTimer = 0;     // Indicator lockout timer
 long previousMillis = 0;      // will store last timer was updated
 
+bool resetAfterInd = true;
 
 
 
@@ -240,9 +242,31 @@ void Running()
   
   if (mainBeam == LOW && IndicatorState == false) 
   {
+    if(resetAfterInd)
+    {
+      // Fade all Leds back on
+      for ( int t=0; t<=255; t+=1 )
+      {
+        analogWrite(led1, t);
+        analogWrite(led2, t);
+        analogWrite(led3, t);
+        delay(leddelay);
+      }
+      for ( int u=255; u>=dayLevel; u-=1 )
+      {
+        analogWrite(led1, u);
+        analogWrite(led2, u);
+        analogWrite(led3, u);
+        delay(leddelay);
+      }
+    }
+    else
+    {
+      /* once ramped up enter here */
       digitalWrite(led1,HIGH);
       digitalWrite(led2,HIGH);
       digitalWrite(led3,HIGH);
+    }
   }
   else if (dayORnight == HIGH  && IndicatorState == false) 
   {
@@ -258,10 +282,20 @@ void Running()
   }
   else if (IndicatorState == true)
   {
-      analogWrite(led1, signalOuter);
-      analogWrite(led2, signalCentre);
-      analogWrite(led3, signalOuter);
+      // here is where you want to set 
+      // the polarity of led1 and led2 to be reversed
+      analogWrite(led1, 0);
+      analogWrite(led2, 0);
+      analogWrite(led3, 0);
+      resetAfterInd = true;
   }
+
+  // else if (IndicatorState == true)
+  // {
+  //     analogWrite(led1, signalInner);
+  //     analogWrite(led2, signalCentre);
+  //     analogWrite(led3, signalOuter);
+  // }
         
 
 }
